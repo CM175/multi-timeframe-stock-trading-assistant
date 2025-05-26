@@ -53,10 +53,6 @@ if st.button("Run Analysis"):
         prob = model.predict_proba([latest[features]])[0]
         st.write("Confidence:")
         st.progress(prob[pred])  # bar for confidence
-        st.json({label: f"{p:.2%}" for label, p in zip(model.classes_, prob)})
-       
-
-    st.write(f"Prediction: **{'Buy' if latest['Prediction'] == 1 else 'Sell' if latest['Prediction'] == -1 else 'Hold'}**")
 
     st.subheader("Chart")
     st.line_chart(df.set_index(df.columns[0])[[f"Close_{ticker}"]])
