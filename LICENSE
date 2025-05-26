@@ -1,0 +1,9 @@
+
+---
+
+## ✅ Next Steps
+
+### 1. **Create the Repo**
+
+```bash
+gh repo create multi-timeframe-stock-trading-assistant --public
