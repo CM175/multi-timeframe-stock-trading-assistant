@@ -8,13 +8,18 @@ A smart, interactive Streamlit app that predicts stock price movements across mu
 - Computes multiple technical indicators
 - Predicts short-term stock direction with ML
 - Visualizes model confidence and feature importance
-- SHAP-based explainability (why the model made a decision)
 - Interactive dashboard built with Streamlit
+
+## 🛠 Tech Stack
+
+- **Backend:** Python, yfinance, TA-Lib, scikit-learn
+- **Machine Learning:** Random Forest, joblib
+- **Visualization:** Streamlit
 
 ## 🚀 Run Locally
 
 ```bash
-git clone https://github.com/yourusername/multi-timeframe-stock-trading-assistant.git
+git clone https://github.com/CM175/multi-timeframe-stock-trading-assistant.git
 cd multi-timeframe-stock-trading-assistant
 pip install -r requirements.txt
-streamlit run src/app.py
+python -m streamlit run src/app.py
