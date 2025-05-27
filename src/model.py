@@ -9,32 +9,47 @@ from src.features import add_lag_and_rolling_features
 
 
 
-def generate_labels(df: pd.DataFrame,ticker,  horizon=5) -> pd.DataFrame:
+def generate_labels(df: pd.DataFrame, ticker: str, horizon: int = 15, stop_loss: float = 0.01, take_profit: float = 0.015) -> pd.DataFrame:
     df = df.copy()
-    df['future_return'] = df[f'Close_{ticker}'].pct_change(horizon).shift(-horizon)
+    df['Signal'] = 1  # Default to Hold
 
-    low = df['future_return'].quantile(0.33)
-    high = df['future_return'].quantile(0.66)
+    for i in range(len(df) - horizon):
+        entry = df[f'Close_{ticker}'].iloc[i]
+        future_highs = df[f'High_{ticker}'].iloc[i+1:i+1+horizon]
+        future_lows = df[f'Low_{ticker}'].iloc[i+1:i+1+horizon]
 
-    df['Signal'] = pd.cut(
-        df['future_return'],
-        bins=[-float('inf'), low, high, float('inf')],
-        labels=[0, 1, 2]
-    )
+        tp_level = entry * (1 + take_profit)
+        sl_level = entry * (1 - stop_loss)
+
+        for high, low in zip(future_highs, future_lows):
+            if high >= tp_level:
+                df.at[df.index[i], 'Signal'] = 2  # Buy
+                break
+            elif low <= sl_level:
+                df.at[df.index[i], 'Signal'] = 0  # Sell
+                break
+        # If neither, remain Hold
 
     df.dropna(subset=['Signal'], inplace=True)
     df['Signal'] = df['Signal'].astype(int)
-    print("Label distribution:")
+
+    print("Label distribution (Buy=2, Hold=1, Sell=0):")
     print(df['Signal'].value_counts(normalize=True))
 
     return df
 
 
 
+
+
+
+
 def train_model(df: pd.DataFrame, ticker):
     # Generate signal
     df = generate_labels(df, ticker)
-    
+    if df['Signal'].nunique() < 2:
+        raise ValueError("❌ Not enough label diversity — try increasing the horizon or adjusting thresholds.")
+
 
     
     base_features = [
@@ -71,6 +86,11 @@ def train_model(df: pd.DataFrame, ticker):
     
 
     joblib.dump(model, 'models/model.pkl')
+    print("\nClassification Report:")
+    print(classification_report(y_test, y_pred, target_names=["Sell", "Hold", "Buy"]))
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test, y_pred))
+
     return df, model, features
 
 def predict(model, df: pd.DataFrame, features: list):

@@ -5,8 +5,10 @@ from src.utils import fetch_data
 import pandas as pd
 
 # --- 1. Download data ---
-ticker = "AAPL"
-df = fetch_data(ticker, "1m", "1d")
+ticker = "TSLA"  # or NVDA, AMD, COIN, etc.
+
+df = fetch_data(ticker, interval="5m", period="1mo")
+
 df.dropna(inplace=True)
 # --- 2. Feature engineering ---
 df = add_technical_indicators(df, ticker)

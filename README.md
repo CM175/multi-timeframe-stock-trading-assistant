@@ -1,25 +1,56 @@
 # 📈 Multi-Timeframe Stock Trading Assistant
 
-A smart, interactive Streamlit app that predicts stock price movements across multiple timeframes and generates actionable buy/sell signals using technical indicators and machine learning.
+An intelligent trading assistant powered by machine learning and technical indicators.  
+It predicts Buy / Hold / Sell signals using multi-timeframe stock data, and displays results in a real-time, interactive **Streamlit** dashboard.
 
-## 🔧 Features
+> 🔧 Built to showcase ML, data engineering, and frontend skills for fintech roles.
 
-- Pulls real-time and historical stock data (daily, hourly, minute)
-- Computes multiple technical indicators
-- Predicts short-term stock direction with ML
-- Visualizes model confidence and feature importance
-- Interactive dashboard built with Streamlit
+---
+
+## 🚀 Features
+
+- 🔍 **Real-time signal prediction** using technical indicators
+- 🧠 **XGBoost model** trained on engineered features with SMOTE oversampling
+- 🏷️ **Profitability-aware signal labeling** (TP/SL based)
+- ⏱️ **Multi-timeframe support** (1m, 5m, 1d intervals)
+- 📉 Interactive chart with predictions and confidence
+- 💻 Lightweight frontend built with Streamlit
+- ✅ High-performance metrics: 88% accuracy with balanced F1-scores
+
+---
+
+## 🖼️ Screenshots
+
+### 📊 Prediction Output
+![prediction](screenshots/prediction_output.png)
+
+### 🧠 Classification Report
+![classification](screenshots/classification_report.png)
+
+---
 
 ## 🛠 Tech Stack
 
-- **Backend:** Python, yfinance, TA-Lib, scikit-learn
-- **Machine Learning:** Random Forest, joblib
-- **Visualization:** Streamlit
+| Component      | Tools Used |
+|----------------|------------|
+| Language       | Python 3.10+ |
+| ML Model       | XGBoost, SMOTE, scikit-learn |
+| Data Sourcing  | yfinance API |
+| Indicators     | `ta` (technical analysis library) |
+| UI / Dashboard | Streamlit |
+| Others         | pandas, joblib, imbalanced-learn |
 
-## 🚀 Run Locally
+---
+
+## 📦 Installation
 
 ```bash
-git clone https://github.com/CM175/multi-timeframe-stock-trading-assistant.git
+# 1. Clone the repo
+git clone https://github.com/your-username/multi-timeframe-stock-trading-assistant.git
 cd multi-timeframe-stock-trading-assistant
+
+# 2. Install dependencies
 pip install -r requirements.txt
-python -m streamlit run src/app.py
+
+# 3. Run the app
+streamlit run app.py

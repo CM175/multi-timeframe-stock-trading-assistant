@@ -65,11 +65,6 @@ if st.button("Run Analysis"):
             st.write(f"Confidence: {prob[pred] * 100:.2f}%")
             st.progress(float(prob[pred]))
 
-        # --- Debugging output
-        st.subheader("🔍 Prediction Overview")
-        st.write("Prediction distribution:")
-        st.write(df["Prediction"].value_counts())
-
         # --- Chart
         st.subheader("📉 Close Price Chart")
         st.line_chart(df.set_index(df.columns[0])[[f"Close_{ticker}"]])
