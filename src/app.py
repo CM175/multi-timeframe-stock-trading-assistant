@@ -46,7 +46,6 @@ if st.button("Run Analysis"):
         st.warning("⚠️ No data left after feature engineering. Cannot make predictions.")
     else:
         df['Prediction'] = predict(model, df, features)
-        print(df.head(30))
 
         # ✅ Show last prediction details
         latest = df.iloc[-1]
@@ -58,6 +57,57 @@ if st.button("Run Analysis"):
         st.markdown(f"**Date:** {latest[0].date()}")
         st.markdown(f"**Close Price:** ${latest[f'Close_{ticker}']:.2f}")
         st.markdown(f"**Prediction:** {signal}")
+        print(pred)
+        if pred == 2:  # Only show TP/SL suggestion for Buy signals
+            atr = latest["atr"]
+            current_price = latest[f"Close_{ticker}"]
+
+            suggested_tp = current_price + 1.5 * atr
+            suggested_sl = current_price - 1.0 * atr
+
+            st.subheader("🎯 Suggested Strategy")
+            st.markdown(f"**Take Profit:** ${suggested_tp:.2f}  (1.5× ATR)")
+            st.markdown(f"**Stop Loss:** ${suggested_sl:.2f}  (1.0× ATR)")
+
+            # --- Estimate bars to TP
+            lookahead = 30
+            future_prices = df[f"High_{ticker}"].iloc[-lookahead:]
+            time_to_hit = None
+            for i, price in enumerate(future_prices):
+                if price >= suggested_tp:
+                    time_to_hit = i + 1
+                    break
+
+            if time_to_hit:
+                st.markdown(f"📈 Estimated time to hit TP: **{time_to_hit} bars**")
+            else:
+                st.markdown("⌛ Take Profit not hit in next 30 bars.")
+        elif pred == 0:  # Only show TP/SL suggestion for Sell signals
+            atr = latest["atr"]
+            current_price = latest[f"Close_{ticker}"]
+
+            suggested_tp = current_price - 1.5 * atr
+            suggested_sl = current_price + 1.0 * atr
+
+            st.subheader("🎯 Suggested Strategy")
+            st.markdown(f"**Take Profit:** ${suggested_tp:.2f}  (1.5× ATR)")
+            st.markdown(f"**Stop Loss:** ${suggested_sl:.2f}  (1.0× ATR)")
+
+            # --- Estimate bars to TP
+            lookahead = 30
+            future_prices = df[f"High_{ticker}"].iloc[-lookahead:]
+            time_to_hit = None
+            for i, price in enumerate(future_prices):
+                if price >= suggested_tp:
+                    time_to_hit = i + 1
+                    break
+
+            if time_to_hit:
+                st.markdown(f"📈 Estimated time to hit TP: **{time_to_hit} bars**")
+            else:
+                st.markdown("⌛ Take Profit not hit in next 30 bars.")
+        
+
 
         # --- Optional: Show confidence
         if hasattr(model, "predict_proba"):
