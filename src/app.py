@@ -5,6 +5,7 @@ from src.utils import fetch_data
 from src.features import add_technical_indicators, add_lag_and_rolling_features
 from src.model import predict
 from constants import valid_combinations
+import re
 
 st.set_page_config(layout="wide")
 st.title("📈 Multi-Timeframe Stock Trading Assistant")
@@ -27,11 +28,21 @@ if st.button("Run Analysis"):
         'ema_20', 'sma_20', 'adx'
     ]
     # ✅ Load trained model and matching features
-    # --- 1. Fetch and clean data
+    # --- 1. Fetch and clean data    
     df = fetch_data(ticker, interval=interval, period=period)
     df.dropna(inplace=True)
+    
+    if re.match('.+m', interval):
+        df["Datetime"] = pd.to_datetime(df["Datetime"])
+        df["Date"] = df["Datetime"].dt.date
+        df["Time"] = df["Datetime"].dt.time
+        cols = ["Date", "Time"] + [col for col in df.columns if col not in ["Date", "Time"]]
+        df = df[cols]
+        cols = ["Datetime"] + [col for col in df.columns if col not in ["Datetime"]]
+        df = df[cols]
 
     # --- 2. Feature engineering
+    print(df.head())
     df = add_technical_indicators(df, ticker)
     df = add_lag_and_rolling_features(df, base_features)
     model = joblib.load("models/model.pkl")
@@ -54,7 +65,7 @@ if st.button("Run Analysis"):
         signal = prediction_map.get(pred, "❓ Unknown")
 
         st.subheader("📊 Latest Prediction")
-        st.markdown(f"**Date:** {latest[0].date()}")
+        st.markdown(f"**Date:** {latest[0]}")
         st.markdown(f"**Close Price:** ${latest[f'Close_{ticker}']:.2f}")
         st.markdown(f"**Prediction:** {signal}")
         print(pred)

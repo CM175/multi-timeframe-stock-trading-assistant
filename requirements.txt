@@ -6,3 +6,4 @@ yfinance
 ta
 joblib
 pandas
+re

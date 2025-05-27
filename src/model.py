@@ -65,6 +65,9 @@ def train_model(df: pd.DataFrame, ticker):
 
     # Final feature list
     features = df.columns[df.columns.str.startswith(tuple(base_features))].tolist()
+    if 'Time' in df.columns:
+        df['Time'] = df['Time'].apply(lambda t: t.hour + t.minute / 60)
+        features.append('Time')
     
     X = df[features]
     y = df['Signal']
