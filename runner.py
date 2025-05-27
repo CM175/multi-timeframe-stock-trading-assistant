@@ -8,7 +8,7 @@ import re
 # --- 1. Download data ---
 ticker = "TSLA"  # or NVDA, AMD, COIN, etc.
 
-df = fetch_data(ticker, interval="5m", period="1mo")
+df = fetch_data(ticker, interval="15m", period="1mo")
 if re.match('.+m', "5m"):
         df["Datetime"] = pd.to_datetime(df["Datetime"])
         df["Date"] = df["Datetime"].dt.date

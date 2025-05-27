@@ -9,7 +9,7 @@ from src.features import add_lag_and_rolling_features
 
 
 
-def generate_labels(df: pd.DataFrame, ticker: str, horizon: int = 15, stop_loss: float = 0.01, take_profit: float = 0.015) -> pd.DataFrame:
+def generate_labels(df: pd.DataFrame, ticker: str, horizon: int = 5, stop_loss: float = 0.02, take_profit: float = 0.02) -> pd.DataFrame:
     df = df.copy()
     df['Signal'] = 1  # Default to Hold
 
