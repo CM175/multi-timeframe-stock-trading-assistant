@@ -6,4 +6,4 @@ yfinance
 ta
 joblib
 pandas
-re
+# 're' is part of Python stdlib; not required in requirements

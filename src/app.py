@@ -4,7 +4,7 @@ import joblib
 from src.utils import fetch_data
 from src.features import add_technical_indicators, add_lag_and_rolling_features
 from src.model import predict
-from constants import valid_combinations
+from src.constants import valid_combinations
 import re
 
 st.set_page_config(layout="wide")
@@ -122,7 +122,7 @@ if st.button("Run Analysis"):
 
         # --- Optional: Show confidence
         if hasattr(model, "predict_proba"):
-            prob = model.predict_proba(pd.DataFrame([latest[features]]))[0]
+            prob = model.predict_proba(latest[features].to_frame().T)[0]
             st.write(f"Confidence: {prob[pred] * 100:.2f}%")
             st.progress(float(prob[pred]))
 

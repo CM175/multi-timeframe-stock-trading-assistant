@@ -5,7 +5,8 @@ def add_lag_and_rolling_features(df: pd.DataFrame, columns: list) -> pd.DataFram
     df = df.copy()
     for col in columns:
         df[f'{col}_lag1'] = df[col].shift(1)
-        df[f'{col}_roll5'] = df[col].rolling(window=5).mean()
+        # Use a shifted rolling mean to avoid using the current bar (prevent leakage)
+        df[f'{col}_roll5'] = df[col].rolling(window=5).mean().shift(1)
     df.dropna(inplace=True)
     return df
 

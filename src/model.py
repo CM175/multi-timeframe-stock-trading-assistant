@@ -4,6 +4,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
 import joblib
+import os
 from xgboost import XGBClassifier
 from src.features import add_lag_and_rolling_features
 
@@ -22,7 +23,12 @@ def generate_labels(df: pd.DataFrame, ticker: str, horizon: int = 5, stop_loss: 
         sl_level = entry * (1 - stop_loss)
 
         for high, low in zip(future_highs, future_lows):
-            if high >= tp_level:
+            # If both TP and SL occur in the same future bar we cannot know which occurred first
+            # mark it as Hold (ambiguous) to avoid mislabeling from OHLC bars.
+            if (high >= tp_level) and (low <= sl_level):
+                # ambiguous: leave as Hold (1)
+                break
+            elif high >= tp_level:
                 df.at[df.index[i], 'Signal'] = 2  # Buy
                 break
             elif low <= sl_level:
@@ -71,23 +77,26 @@ def train_model(df: pd.DataFrame, ticker):
     
     X = df[features]
     y = df['Signal']
-    # Split and balance
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, shuffle=True)
+    # Chronological split (no shuffling) to avoid lookahead/data leakage in time-series
+    split = int(len(X) * 0.8)
+    X_train, X_test = X.iloc[:split].copy(), X.iloc[split:].copy()
+    y_train, y_test = y.iloc[:split].copy(), y.iloc[split:].copy()
 
     
-    smote = SMOTE()
+    smote = SMOTE(random_state=42)
     
 
     X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
 
     # Model
-    model = XGBClassifier(n_estimators=100, max_depth=5, use_label_encoder=False, eval_metric='mlogloss')
+    model = XGBClassifier(n_estimators=100, max_depth=5, random_state=42, use_label_encoder=False, eval_metric='mlogloss')
     model.fit(X_train_resampled, y_train_resampled)
 
     y_pred = model.predict(X_test)
     
     
 
+    os.makedirs('models', exist_ok=True)
     joblib.dump(model, 'models/model.pkl')
     print("\nClassification Report:")
     print(classification_report(y_test, y_pred, target_names=["Sell", "Hold", "Buy"]))
