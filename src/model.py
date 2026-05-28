@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
 import joblib
 from xgboost import XGBClassifier
-from src.features import add_lag_and_rolling_features
+from features import add_lag_and_rolling_features
 
 
 
@@ -46,18 +46,21 @@ def generate_labels(df: pd.DataFrame, ticker: str, horizon: int = 5, stop_loss: 
 
 def train_model(df: pd.DataFrame, ticker):
     # Generate signal
-    df = generate_labels(df, ticker)
+    # # Horizon=10 (10 hours), TP/SL = 1.5%
+    df = generate_labels(df, ticker, horizon=10, stop_loss=0.015, take_profit=0.015)
     if df['Signal'].nunique() < 2:
         raise ValueError("❌ Not enough label diversity — try increasing the horizon or adjusting thresholds.")
 
 
     
     base_features = [
-        'rsi', 'stoch_k', 'stoch_d', 'williams_r',
-        'bollinger_m', 'bollinger_h', 'bollinger_l', 'atr',
-        'obv', 'mfi',
-        'macd', 'macd_signal', 'macd_diff',
-        'ema_20', 'sma_20', 'adx'
+        'rsi', 
+        'stoch_k', 
+        'stoch_d', 
+        'williams_r',
+        'mfi',
+        'adx', 
+        'macd_diff'  # MACD Histogram is safer than raw MACD
     ]
     
     # Add lag and rolling features
@@ -71,24 +74,23 @@ def train_model(df: pd.DataFrame, ticker):
     
     X = df[features]
     y = df['Signal']
-    # Split and balance
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, shuffle=True)
+    # Split and balance# 
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
 
     
-    smote = SMOTE()
-    
+   # smote = SMOTE()  <-- REMOVED
+    # X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train) <-- REMOVED
 
-    X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
-
-    # Model
-    model = XGBClassifier(n_estimators=100, max_depth=5, use_label_encoder=False, eval_metric='mlogloss')
-    model.fit(X_train_resampled, y_train_resampled)
+    # Model - Train directly on X_train and y_train# max_depth=3 prevents memorizing noise
+    # subsample=0.8 adds randomness to make it robust
+    model = XGBClassifier(n_estimators=100, max_depth=3, subsample=0.8, eval_metric='mlogloss')
+    model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
     
     
 
-    joblib.dump(model, 'models/model.pkl')
+    joblib.dump({'model': model, 'features': features}, 'models/model.pkl')
     print("\nClassification Report:")
     print(classification_report(y_test, y_pred, target_names=["Sell", "Hold", "Buy"]))
     print("Confusion Matrix:")

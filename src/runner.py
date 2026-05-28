@@ -1,15 +1,16 @@
 import yfinance as yf
-from src.features import add_technical_indicators
-from src.model import train_model, predict, add_lag_and_rolling_features
-from src.utils import fetch_data
+from features import add_technical_indicators
+from model import train_model, predict, add_lag_and_rolling_features
+from utils import fetch_data
 import pandas as pd
 import re
 
 # --- 1. Download data ---
 ticker = "TSLA"  # or NVDA, AMD, COIN, etc.
 
-df = fetch_data(ticker, interval="15m", period="1mo")
-if re.match('.+m', "5m"):
+interval = "60m" 
+df = fetch_data(ticker, interval=interval, period="2y")
+if re.match(r'\d+m$', interval):
         df["Datetime"] = pd.to_datetime(df["Datetime"])
         df["Date"] = df["Datetime"].dt.date
         df["Time"] = df["Datetime"].dt.time

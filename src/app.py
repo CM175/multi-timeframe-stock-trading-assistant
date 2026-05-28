@@ -1,9 +1,9 @@
 import streamlit as st 
 import pandas as pd
 import joblib
-from src.utils import fetch_data
-from src.features import add_technical_indicators, add_lag_and_rolling_features
-from src.model import predict
+from utils import fetch_data
+from features import add_technical_indicators, add_lag_and_rolling_features
+from model import predict
 from constants import valid_combinations
 import re
 
@@ -41,15 +41,17 @@ if st.button("Run Analysis"):
         cols = ["Datetime"] + [col for col in df.columns if col not in ["Datetime"]]
         df = df[cols]
 
+
     # --- 2. Feature engineering
     print(df.head())
     df = add_technical_indicators(df, ticker)
     df = add_lag_and_rolling_features(df, base_features)
-    model = joblib.load("models/model.pkl")
-    
+    if 'Time' in df.columns:
+        df['Time'] = df['Time'].apply(lambda t: t.hour + t.minute / 60)
 
-    
-    features = df.columns[df.columns.str.startswith(tuple(base_features))].tolist()
+    bundle = joblib.load("models/model.pkl")
+    model = bundle['model']
+    features = bundle['features']
     df.dropna(inplace=True)
 
     # --- 3. Predict
@@ -65,7 +67,8 @@ if st.button("Run Analysis"):
         signal = prediction_map.get(pred, "❓ Unknown")
 
         st.subheader("📊 Latest Prediction")
-        st.markdown(f"**Date:** {latest[0]}")
+        date_col = "Datetime" if "Datetime" in df.columns else "Date"
+        st.markdown(f"**Date:** {latest[date_col]}")
         st.markdown(f"**Close Price:** ${latest[f'Close_{ticker}']:.2f}")
         st.markdown(f"**Prediction:** {signal}")
         print(pred)
@@ -106,10 +109,10 @@ if st.button("Run Analysis"):
 
             # --- Estimate bars to TP
             lookahead = 30
-            future_prices = df[f"High_{ticker}"].iloc[-lookahead:]
+            future_prices = df[f"Low_{ticker}"].iloc[-lookahead:]
             time_to_hit = None
             for i, price in enumerate(future_prices):
-                if price >= suggested_tp:
+                if price <= suggested_tp:
                     time_to_hit = i + 1
                     break
 
